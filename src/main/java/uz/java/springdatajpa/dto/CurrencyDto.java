@@ -1,17 +1,15 @@
 package uz.java.springdatajpa.dto;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
-import java.util.Date;
-
-@Data
+@Getter
+@Setter
 @AllArgsConstructor
 @NoArgsConstructor
 public class CurrencyDto {
     private Integer id;
     private String currencyName;
+    private String currencyShortName;
     private Double difference;
-    private Date changedDate;
+    private String changedDate;
 }

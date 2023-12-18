@@ -3,7 +3,7 @@ package uz.java.springdatajpa.model;
 import lombok.Getter;
 import lombok.Setter;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.util.Date;
 
 @Entity
@@ -13,7 +13,7 @@ public class Users {
 
     @Id
     @GeneratedValue(generator = "users_id_seq")
-    @SequenceGenerator(name = "users_id_seq", sequenceName = "users_id_seq", allocationSize = 1, initialValue = 1000)
+    @SequenceGenerator(name = "users_id_seq", sequenceName = "users_id_seq", allocationSize = 1)
     private Integer id;
 
     @Column(name = "first_name")
@@ -38,12 +38,21 @@ public class Users {
     private String password;
 
     @Column(name = "image_url")
-    private String imageUrl;
+    private String imageURL;
 
     @Column(name = "phone_number")
     private String phoneNumber;
 
     @Column(name = "email")
     private String email;
+
+    @Column(name = "is_active")
+    private short isActive;
+
+    @Column(name = "deleted_at")
+    private Date deletedAt;
+
+    @Column(name = "updated_at")
+    private Date updatedAt;
 
 }

@@ -1,67 +1,81 @@
 package uz.java.springdatajpa.service;
 
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import uz.java.springdatajpa.dto.CurrencyDto;
+import uz.java.springdatajpa.dto.ResponseDto;
 import uz.java.springdatajpa.exceptions.DataNotFoundException;
 import uz.java.springdatajpa.model.Currency;
 import uz.java.springdatajpa.repository.CurrencyRepository;
+import uz.java.springdatajpa.service.mapper.CurrencyMapper;
 
 import java.util.Date;
 import java.util.Optional;
 
 @Service
+@RequiredArgsConstructor
+@Slf4j
 public class CurrencyExchangeService {
 
-    @Autowired
-    private CurrencyRepository currencyRepository;
+    private final CurrencyRepository currencyRepository;
 
-    public CurrencyDto currencyInfo(String cur){
-        CurrencyDto currencyDto = new CurrencyDto();
-        currencyDto.setChangedDate(new Date());
-        switch (cur) {
-            case "USD" -> {
-                currencyDto.setId(1);
-                currencyDto.setCurrencyName("United States Dollars");
-                currencyDto.setDifference(11230D);
-            }
-            case "RUB" -> {
-                currencyDto.setId(2);
-                currencyDto.setCurrencyName("Russian Ruble");
-                currencyDto.setDifference(182.62);
-            }
-        }
+    private final CurrencyMapper currencyMapper;
 
-        return currencyDto;
-    }
-
-    public String addNewCurrency(String currencyName, String currencyShortname, Double difference) {
-        Currency currency = new Currency();
-
-        currency.setName(currencyName);
-        currency.setShortName(currencyShortname);
-        currency.setDifference(difference);
+    public ResponseDto<CurrencyDto> addNewCurrency(CurrencyDto currencyDto) {
 
         try {
+            Currency currency = currencyMapper.toEntity(currencyDto);
             currencyRepository.save(currency);
-            return "Saved successfully!";
+            return ResponseDto.<CurrencyDto>builder()
+                    .message("Currency muvoffaqiyatli saqlandi")
+                    .success(true)
+                    .data(currencyDto)
+                    .build();
         }catch (Exception e){
-            e.printStackTrace();
-            return "Error while saving currency data: " + e.getMessage();
+            log.error("Currency ma`lumotini saqlashda xatolik --> {}",e.getMessage());
+            return ResponseDto.<CurrencyDto>builder()
+                    .message("Currency ma`lumotini saqlashda xatolik!")
+                    .success(false)
+                    .code(2)
+                    .build();
         }
     }
 
-    public CurrencyDto getCurrencyInfoByShortName(String shortName) throws DataNotFoundException {
-        Optional<Currency> currencyOptional = currencyRepository.findFirstByShortName(shortName);
+    public ResponseDto<CurrencyDto> getCurrencyInfoByShortName(String shortName) throws DataNotFoundException {
+        Optional<Currency> currencyOptional = currencyRepository.findFirstByCurrencyShortName(shortName);
 
         if (currencyOptional.isEmpty()){
             throw new DataNotFoundException(String.format("Data with shortname %s is not found", shortName));
         }
 
         Currency currency = currencyOptional.get();
-        return new CurrencyDto(currency.getId(),
-                currency.getName(),
-                currency.getDifference(),
-                currency.getChangeDate());
+        return ResponseDto.<CurrencyDto>builder()
+                .success(true)
+                .data(currencyMapper.toDto(currency))
+                .message("OK")
+                .build();
+    }
+
+    public ResponseDto<CurrencyDto> findById(Integer id) {
+
+        Optional<Currency> currency = currencyRepository.findById(id);
+
+        if (currency.isEmpty()){
+            return ResponseDto.<CurrencyDto>builder()
+                    .message("Currency ma`lumoti topilmadi!")
+                    .code(-1)
+                    .build();
+        }
+
+        CurrencyDto currencyDto = currencyMapper.toDto(currency.get());
+        return ResponseDto.<CurrencyDto>builder()
+                .message("OK")
+                .success(true)
+                .data(currencyDto)
+                .build();
+
+
     }
 }
